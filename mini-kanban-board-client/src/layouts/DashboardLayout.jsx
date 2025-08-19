@@ -14,7 +14,7 @@ import useUserRole from "../hooks/useUserRole";
 
 const DashboardLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
-  const { user, handleLogout } = useAuth();
+  const { user, logoutUser } = useAuth();
   const { role } = useUserRole();
 
   return (
@@ -81,7 +81,9 @@ const DashboardLayout = () => {
             <>
               <p className="text-lg flex  justify-center items-center font-semibold text-black ml-2 mt-4">
                 <span className=" capitalize">{role} </span> <span> </span>
-                <span className={`${isOpen ? "block" : "hidden"}`}>' Panel</span>
+                <span className={`${isOpen ? "block" : "hidden"}`}>
+                  ' Panel
+                </span>
               </p>
             </>
           )}
@@ -113,7 +115,7 @@ const DashboardLayout = () => {
         {/* Bottom Part */}
         <div className={`${isOpen ? "block" : "hidden"}`}>
           <button
-            onClick={handleLogout}
+            onClick={() => logoutUser()}
             className=" w-11/12 mx-auto ml-2 mb-2 rounded-md border-2 border-white py-2 px-4  text-xl"
           >
             Logout

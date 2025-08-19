@@ -4,6 +4,8 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { Link, useNavigate, useLocation } from "react-router";
 import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAxiosInstance from "../../../hooks/useAxiosInstance";
 // import useAxiosInstance from "../../../hooks/useAxiosInstance";
 
 const Register = () => {
@@ -12,75 +14,88 @@ const Register = () => {
   const [error, setError] = useState("");
 
   const { createUser, updateUserProfile, setLoading, setUser } = useAuth();
-  // const axiosInstance = useAxiosInstance();
+  const axiosInstance = useAxiosInstance();
+  const axiosSecure=useAxiosSecure()
 
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm();
+const {
+  register,
+  handleSubmit,
+  watch,
+  formState: { errors, isSubmitting },
+} = useForm();
 
-  const onSubmit = async (data) => {
-    const { firstName, lastName, email, password } = data;
-    const displayName = `${firstName} ${lastName}`;
-    const uploadedImage = ""; // যদি পরে ফটো upload করো
+const onSubmit = async (data) => {
+  const { firstName, lastName, email } = data;
+  const displayName = `${firstName} ${lastName}`;
+  const uploadedImage = ""; 
 
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    try {
-      // Firebase create user
-      const result = await createUser(email, password);
+  try {
+    // 1. Firebase create user
+    const result = await createUser(email, data?.password);
 
-      // Update displayName & photoURL
-      await updateUserProfile({ displayName, photoURL: uploadedImage });
+    // 2. Update profile
+    await updateUserProfile({ displayName, photoURL: uploadedImage });
 
-      // Success toast
-      toast.success(
-        from
-          ? "SignUp successfully! Redirecting to your previous page..."
-          : "SignUp successfully! Redirecting to home page..."
-      );
+    // 3. Save user to DB (exclude sensitive fields)
+    // eslint-disable-next-line no-unused-vars
+    const { confirmPassword,password, ...userData } = data;
+    const userInfoDB = {
+      ...userData,
+      name: `${firstName} ${lastName}`,
+      registered_at: new Date().toISOString(),
+      last_log_in: new Date().toISOString(),
+      photo: uploadedImage,
+      role: userData.role || "Member", // default role fallback
+    };
 
-      // // Save user to DB
-      // const { confirmPassword, ...userData } = data;
-      // const userInfoDB = {
-      //   ...userData,
-      //   uid: result.user.uid,
-      //   created_at: new Date().toISOString(),
-      //   last_log_in: new Date().toISOString(),
-      //   photo: uploadedImage,
-      // };
+    await axiosInstance.post("/users", userInfoDB);
 
-      // await axiosInstance.post("/users", userInfoDB);
+    // 4. Get JWT and set cookie
+    await axiosSecure.post(
+      "/jwt",
+      { email: result?.user?.email },
+      { withCredentials: true }
+    );
 
-      setUser(result.user);
-      navigate(from);
-    } catch (err) {
-      console.error(err);
-      switch (err.code) {
-        case "auth/invalid-credential":
-          setError("Invalid email or password. Please check and try again.");
-          break;
-        case "auth/email-already-in-use":
-          setError(
-            "This email is already registered. Please login or use another email."
-          );
-          break;
-        default:
-          setError("An unexpected error occurred. Please try again.");
-      }
-    } finally {
-      setLoading(false);
+    // 5. Update context + redirect
+    setUser(result.user);
+    toast.success(
+      from
+        ? "SignUp successful! Redirecting to your previous page..."
+        : "SignUp successful! Redirecting to home..."
+    );
+    navigate(from || "/");
+  } catch (err) {
+    console.error("Signup Error:", err);
+
+    let message = "An unexpected error occurred. Please try again.";
+    switch (err.code) {
+      case "auth/invalid-credential":
+        message = "Invalid email or password. Please check and try again.";
+        break;
+      case "auth/email-already-in-use":
+        message =
+          "This email is already registered. Please login or use another email.";
+        break;
+      case "auth/weak-password":
+        message = "Password must be at least 6 characters.";
+        break;
     }
-  };
+    setError(message);
+    toast.error(message);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const password = watch("password");
+const password = watch("password");
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">

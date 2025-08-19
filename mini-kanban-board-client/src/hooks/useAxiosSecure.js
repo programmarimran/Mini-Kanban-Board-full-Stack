@@ -1,54 +1,56 @@
 import { useEffect } from "react";
 import axios from "axios";
-
 import { useNavigate } from "react-router";
-import { getToken } from "../contexts/auth/AuthProvider";
 import useAuth from "./useAuth";
-// import { getToken } from "../contexts/auth/AuthProvider";
 
+// Secure axios instance
 const axiosSecure = axios.create({
   baseURL: import.meta.env.VITE_Server_URL,
+  withCredentials: true, 
 });
 
 const useAxiosSecure = () => {
   const navigate = useNavigate();
   const { user, logoutUser } = useAuth();
-  const token = getToken();
+
   useEffect(() => {
     if (!user) return;
 
-    // Add request interceptor
+    //  Request Interceptor
     const requestInterceptor = axiosSecure.interceptors.request.use(
       (config) => {
-        config.headers.Authorization = `Bearer ${token}`;
+     
         return config;
       },
       (error) => Promise.reject(error)
     );
 
-    // Add response interceptor
+    //  Response Interceptor
     const responseInterceptor = axiosSecure.interceptors.response.use(
       (res) => res,
       (error) => {
         const status = error?.response?.status;
+
         if (status === 401) {
           logoutUser();
           navigate("/login");
         }
+
         if (status === 403) {
           console.warn("🚫 Unauthorized or Forbidden, redirecting...");
           navigate("/forbidden");
         }
+
         return Promise.reject(error);
       }
     );
 
-    // Clean up interceptors when user/logs out or changes
+    //  Cleanup interceptors when user changes / logs out
     return () => {
       axiosSecure.interceptors.request.eject(requestInterceptor);
       axiosSecure.interceptors.response.eject(responseInterceptor);
     };
-  }, [user, navigate]);
+  }, [user, navigate, logoutUser]);
 
   return axiosSecure;
 };

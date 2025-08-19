@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import useAuth from "../../../hooks/useAuth";
+import { toast } from "react-toastify";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const Login = () => {
+  const axiosSecure = useAxiosSecure();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+  const { loginUser, setLoading } = useAuth();
   const {
     register,
     handleSubmit,
@@ -14,12 +19,41 @@ const Login = () => {
     formState: { errors, isSubmitting },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log(data); // Firebase বা backend এ পাঠাতে পারো
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const result = await loginUser(data.email, data.password);
+      // console.log(result);
+      result ? "" : "";
+      console.log(result)
+      await axiosSecure.post(
+        "/jwt",
+        { email: result?.user?.email },
+        { withCredentials: true }
+      );
+      toast.success(`Login successful! Redirecting...`);
+      // redirect to home/dashboard
+      navigate("/");
+    } catch (err) {
+      // Firebase error friendly messages
+      let message = "Something went wrong. Please try again.";
+      if (err.code === "auth/user-not-found") {
+        message = "No account found with this email.";
+      } else if (err.code === "auth/wrong-password") {
+        message = "Incorrect password. Please try again.";
+      } else if (err.code === "auth/invalid-email") {
+        message = "Invalid email format.";
+      } else if (err.code === "auth/too-many-requests") {
+        message = "Too many login attempts. Try again later.";
+      }
+
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const password = watch("password");
-
   return (
     <div className="flex items-center justify-center min-h-screen  p-4">
       <div className="w-full max-w-xl bg-gradient-to-br from-blue-900 via-blue-700 to-blue-900 rounded-2xl p-8 border border-white/20">
@@ -29,8 +63,6 @@ const Login = () => {
 
         <form className="space-y-6 " onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      
-
             {/* Email */}
             <div>
               <label className="block text-white font-medium mb-2">
@@ -155,14 +187,17 @@ const Login = () => {
             disabled={isSubmitting}
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-4 px-6 rounded-lg hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transform hover:scale-[1.02] transition-all duration-200"
           >
-            {isSubmitting ? "Registering..." : "Register"}
+            {isSubmitting ? "Loging..." : "Login"}
           </button>
-         <p
-  to="/register"
-  className="flex justify-center items-center text-center text-white"
->
-  You have no Account? <Link to="/register" className="underline">Register</Link>
-</p>
+          <p
+            to="/register"
+            className="flex justify-center items-center text-center text-white"
+          >
+            You have no Account?{" "}
+            <Link to="/register" className="underline">
+              Register
+            </Link>
+          </p>
         </form>
       </div>
     </div>
