@@ -1,6 +1,6 @@
 
 import { boardsData } from "../../../../assets/data/dashboardBoardData";
-import BoardList from "../../shared/BoardList";
+import BoardList from "../../shared/boardList/BoardList";
 
 const MemberHome = () => {
   const userRole = "member";

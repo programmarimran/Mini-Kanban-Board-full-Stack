@@ -5,8 +5,8 @@ import AuthLayout from "../layouts/AuthLayout";
 import Login from "../pages/auth/email&password/Login";
 import Register from "../pages/auth/email&password/Register";
 import ErrorPage from "../pages/error/ErrorPage";
-import BoardList from "../pages/dashboard/shared/BoardList";
-import BoardDetails from "../pages/dashboard/shared/BoardDetails";
+import BoardList from "../pages/dashboard/shared/boardList/BoardList";
+import BoardDetails from "../pages/dashboard/shared/boardList/BoardDetails";
 
 const router = createBrowserRouter([
   {

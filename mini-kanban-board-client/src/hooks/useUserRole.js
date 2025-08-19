@@ -11,7 +11,7 @@ const useUserRole = () => {
   //     return res.data.role;
   //   },
   // });
-  const roleData="admin"
+  const roleData="intern"
   const roleLoading=false
   const role = roleData;
   return { role, roleLoading };

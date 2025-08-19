@@ -1,10 +1,11 @@
 import { Link } from "react-router";
-import { boardsData } from "../../../assets/data/dashboardBoardData";
+import { boardsData } from "../../../../assets/data/dashboardBoardData";
+import useUserRole from "../../../../hooks/useUserRole";
 
 const BoardList = () => {
-  const userRole = "admin";
+  const {role} = useUserRole();
   const title = "My Boards";
-  const boards = boardsData.filter((board) => board.seeRole === userRole);
+  const boards = boardsData.filter((board) => board.seeRole === role);
   return (
     <div className="mb-8">
       <h2 className="text-lg font-semibold mb-4">{title}</h2>
