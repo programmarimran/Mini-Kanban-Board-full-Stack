@@ -4,7 +4,7 @@ const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const jwtCookiesRoutes = require("./routes/jwtCookiesRoutes");
 const cookieParser = require("cookie-parser");
-
+const boardsDataRoutes=require("./routes/boardsDataRoutes")
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -19,4 +19,5 @@ app.get("/", (req, res) => {
 });
 app.use("/users", userRoutes);
 app.use("/", jwtCookiesRoutes);
+app.use("/boards", boardsDataRoutes);
 module.exports = app;
