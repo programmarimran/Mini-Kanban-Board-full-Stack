@@ -33,7 +33,7 @@ const ErrorPage = () => {
         </Link>
       </motion.div>
     </div>
-  );
+  ); 
 };
 
 export default ErrorPage;

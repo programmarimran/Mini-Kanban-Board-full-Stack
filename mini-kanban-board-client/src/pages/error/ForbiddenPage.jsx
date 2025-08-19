@@ -13,7 +13,7 @@ const ForbiddenPage = () => {
     await logoutUser();
     navigate("/login");
   };
-
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-white">
       <motion.div
