@@ -11,35 +11,20 @@ import BoardDetails from "../pages/dashboard/shared/boardList/BoardDetails";
 const router = createBrowserRouter([
   {
     path: "/",
-    Component: DashboardLayout,
-    errorElement: ErrorPage,
+    element: <DashboardLayout />,
+    errorElement: <ErrorPage />,
     children: [
-      {
-        index: true,
-        Component: DashboardHome,
-      },
-      {
-        path: "/boards",
-        element: <BoardList />,
-      },
-      {
-        path:"/details/:id",
-        Component:BoardDetails
-      }
+      { index: true, element: <DashboardHome /> },
+      { path: "boards", element: <BoardList /> },
+      { path: "details/:id", element: <BoardDetails /> },
     ],
   },
   {
-    path: "/",
-    Component: AuthLayout,
+    path: "/auth",
+    element: <AuthLayout />,
     children: [
-      {
-        path: "/login",
-        Component: Login,
-      },
-      {
-        path: "/register",
-        Component: Register,
-      },
+      { path: "login", element: <Login /> },
+      { path: "register", element: <Register /> },
     ],
   },
 ]);
