@@ -20,7 +20,6 @@ const createUser = async (req, res) => {
     // Insert new user
     const newUser = {
       ...userData,
-      role:"member",
       isVerified: false,
     };
 
