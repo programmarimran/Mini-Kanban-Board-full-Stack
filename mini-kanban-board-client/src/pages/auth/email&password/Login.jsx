@@ -25,7 +25,7 @@ const Login = () => {
       const result = await loginUser(data.email, data.password);
       // console.log(result);
       result ? "" : "";
-      console.log(result)
+      // console.log(result)
       await axiosSecure.post(
         "/jwt",
         { email: result?.user?.email },

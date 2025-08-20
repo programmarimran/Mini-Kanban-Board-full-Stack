@@ -2,15 +2,15 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 const AddCardModal = ({ isOpen, onClose, onAddCard }) => {
-  const [newCard, setNewCard] = useState({ id: "", title: "", description: "" });
+  const [newCard, setNewCard] = useState({ title: "", description: "" });
 
   const handleInputChange = (e) => {
     setNewCard({ ...newCard, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = () => {
-    onAddCard(newCard); // Parent থেকে পাঠানো function কল
-    setNewCard({ id: "", title: "", description: "" });
+    onAddCard(newCard);
+    setNewCard({ title: "", description: "" });
   };
 
   if (!isOpen) return null;
@@ -26,14 +26,6 @@ const AddCardModal = ({ isOpen, onClose, onAddCard }) => {
         </button>
         <h2 className="text-xl font-semibold mb-4">Add New Card</h2>
         <div className="space-y-3">
-          <input
-            type="text"
-            name="id"
-            placeholder="Card ID"
-            value={newCard.id}
-            onChange={handleInputChange}
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
           <input
             type="text"
             name="title"

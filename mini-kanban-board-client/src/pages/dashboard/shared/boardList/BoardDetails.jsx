@@ -1,20 +1,41 @@
 import { ChevronRight, Calendar, User, Eye, Plus } from "lucide-react";
 import { useParams } from "react-router";
-import { boardsData } from "../../../../assets/data/dashboardBoardData";
 import { useState } from "react";
 import AddCardModal from "./AddCardModal";
+import useAxiosSecure from "../../../../hooks/useAxiosSecure";
+import { useQuery } from "@tanstack/react-query";
 
 const BoardDetails = () => {
-      const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const axiosSecure = useAxiosSecure();
+  const { id } = useParams();
 
-  const handleAddCard = (card) => {
+  const {
+    data: boardData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["boards", id],
+    queryFn: async () => {
+      const res = await axiosSecure.get(`/boards/${id}`);
+      return res.data;
+    },
+  });
+
+  const handleAddCard = (cardData) => {
+    const { _id, title, description } = cardData;
+    const card = { columnId: _id, title, description };
     console.log("New Card:", card);
-    // এখানে তুমি API POST call করতে পারো বা state update
+    // POST call example
+    axiosSecure
+      .put(`/boards/${id}`, card)
+      .then(() => console.log("Card added"))
+      .catch((err) => console.error(err));
     setIsModalOpen(false);
   };
 
-  const { id } = useParams();
-  const boardData = boardsData.find((item) => item.id == id);
+  if (isLoading) return <p>Loading board...</p>;
+  if (isError) return <p>Error loading board.</p>;
 
   const getColumnColor = (columnName) => {
     const colors = {
@@ -83,7 +104,7 @@ const BoardDetails = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
           {boardData.columns.map((column) => (
             <div
-              key={column.id}
+              key={column._id}
               className={`rounded-lg border-2 p-4 ${getColumnColor(
                 column.name
               )}`}
@@ -100,7 +121,7 @@ const BoardDetails = () => {
               <div className="space-y-3">
                 {column.cards.map((card) => (
                   <div
-                    key={card.id}
+                    key={card._id}
                     className={`bg-white rounded-lg p-4 shadow-sm border border-gray-200 border-l-4 ${getCardColor(
                       column.name
                     )} hover:shadow-md transition-shadow cursor-pointer`}
@@ -119,7 +140,10 @@ const BoardDetails = () => {
                 ))}
 
                 {/* Add Card Button */}
-                <button  onClick={() => setIsModalOpen(true)} className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-2"
+                >
                   <Plus className="w-4 h-4" />
                   <span className="text-sm">Add card</span>
                 </button>
@@ -132,7 +156,7 @@ const BoardDetails = () => {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
           {boardData.columns.map((column) => (
             <div
-              key={`stat-${column.id}`}
+              key={`stat-${column._id}`}
               className="bg-white rounded-lg p-4 shadow-sm border"
             >
               <div className="text-2xl font-bold text-gray-900">
@@ -143,7 +167,8 @@ const BoardDetails = () => {
           ))}
         </div>
       </div>
-        {/* Modal */}
+
+      {/* Modal */}
       <AddCardModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

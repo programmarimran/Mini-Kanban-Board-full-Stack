@@ -11,12 +11,38 @@ import {
 import { Link, Outlet } from "react-router";
 import useAuth from "../hooks/useAuth";
 import useUserRole from "../hooks/useUserRole";
+import Swal from "sweetalert2";
+import useAxiosSecure from "../hooks/useAxiosSecure";
 
 const DashboardLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
   const { user, logoutUser } = useAuth();
-  const { role } = useUserRole();
+  const { role, roleLoading } = useUserRole();
+  const axiosSecure = useAxiosSecure();
 
+  const handleLogout = () => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, Logout it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await axiosSecure.post(
+          "/logout",
+          { email: result?.user?.email },
+          { withCredentials: true }
+        );
+        logoutUser();
+      }
+    });
+  };
+  if (roleLoading) {
+    return "";
+  }
   return (
     <div className="relative h-screen bg-gray-100 ">
       {/* Sidebar */}
@@ -79,7 +105,7 @@ const DashboardLayout = () => {
 
           {role && (
             <>
-              <p className="text-lg flex  justify-center items-center font-semibold text-black ml-2 mt-4">
+              <p className="text-sm flex  justify-center items-center font-semibold text-black ml-2 mt-4">
                 <span className=" capitalize">{role} </span> <span> </span>
                 <span className={`${isOpen ? "block" : "hidden"}`}>
                   ' Panel
@@ -115,7 +141,7 @@ const DashboardLayout = () => {
         {/* Bottom Part */}
         <div className={`${isOpen ? "block" : "hidden"}`}>
           <button
-            onClick={() => logoutUser()}
+            onClick={handleLogout}
             className=" w-11/12 mx-auto ml-2 mb-2 rounded-md border-2 border-white py-2 px-4  text-xl"
           >
             Logout

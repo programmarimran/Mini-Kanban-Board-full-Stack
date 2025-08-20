@@ -15,87 +15,89 @@ const Register = () => {
 
   const { createUser, updateUserProfile, setLoading, setUser } = useAuth();
   const axiosInstance = useAxiosInstance();
-  const axiosSecure=useAxiosSecure()
+  const axiosSecure = useAxiosSecure();
 
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/";
 
-const {
-  register,
-  handleSubmit,
-  watch,
-  formState: { errors, isSubmitting },
-} = useForm();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm();
 
-const onSubmit = async (data) => {
-  const { firstName, lastName, email } = data;
-  const displayName = `${firstName} ${lastName}`;
-  const uploadedImage = ""; 
+  const onSubmit = async (data) => {
+    const { firstName, lastName, email } = data;
+    const displayName = `${firstName} ${lastName}`;
+    const uploadedImage = "";
 
-  setLoading(true);
-  setError("");
+    setLoading(true);
+    setError("");
 
-  try {
-    // 1. Firebase create user
-    const result = await createUser(email, data?.password);
+    try {
+      // 1. Firebase create user
+      const result = await createUser(email, data?.password);
 
-    // 2. Update profile
-    await updateUserProfile({ displayName, photoURL: uploadedImage });
+      // 2. Update profile
+      await updateUserProfile({ displayName, photoURL: uploadedImage });
 
-    // 3. Save user to DB (exclude sensitive fields)
-    // eslint-disable-next-line no-unused-vars
-    const { confirmPassword,password, ...userData } = data;
-    const userInfoDB = {
-      ...userData,
-      name: `${firstName} ${lastName}`,
-      registered_at: new Date().toISOString(),
-      last_log_in: new Date().toISOString(),
-      photo: uploadedImage,
-      role: userData.role || "Member", // default role fallback
-    };
+      // 3. Save user to DB (exclude sensitive fields)
+      // eslint-disable-next-line no-unused-vars
+      const { confirmPassword, password, ...userData } = data;
+      // console.log(userData.role.toLowerCase());
+      const roledata = userData.role.toLowerCase();
+      const userInfoDB = {
+        ...userData,
+        name: `${firstName} ${lastName}`,
+        registered_at: new Date().toISOString(),
+        last_log_in: new Date().toISOString(),
+        photo: uploadedImage,
+        role: roledata || "Member", // default role fallback
+      };
 
-    await axiosInstance.post("/users", userInfoDB);
+      await axiosInstance.post("/users", userInfoDB);
 
-    // 4. Get JWT and set cookie
-    await axiosSecure.post(
-      "/jwt",
-      { email: result?.user?.email },
-      { withCredentials: true }
-    );
+      // 4. Get JWT and set cookie
+      await axiosSecure.post(
+        "/jwt",
+        { email: result?.user?.email },
+        { withCredentials: true }
+      );
 
-    // 5. Update context + redirect
-    setUser(result.user);
-    toast.success(
-      from
-        ? "SignUp successful! Redirecting to your previous page..."
-        : "SignUp successful! Redirecting to home..."
-    );
-    navigate(from || "/");
-  } catch (err) {
-    console.error("Signup Error:", err);
+      // 5. Update context + redirect
+      setUser(result.user);
+      toast.success(
+        from
+          ? "SignUp successful! Redirecting to your previous page..."
+          : "SignUp successful! Redirecting to home..."
+      );
+      navigate(from || "/");
+    } catch (err) {
+      console.error("Signup Error:", err);
 
-    let message = "An unexpected error occurred. Please try again.";
-    switch (err.code) {
-      case "auth/invalid-credential":
-        message = "Invalid email or password. Please check and try again.";
-        break;
-      case "auth/email-already-in-use":
-        message =
-          "This email is already registered. Please login or use another email.";
-        break;
-      case "auth/weak-password":
-        message = "Password must be at least 6 characters.";
-        break;
+      let message = "An unexpected error occurred. Please try again.";
+      switch (err.code) {
+        case "auth/invalid-credential":
+          message = "Invalid email or password. Please check and try again.";
+          break;
+        case "auth/email-already-in-use":
+          message =
+            "This email is already registered. Please login or use another email.";
+          break;
+        case "auth/weak-password":
+          message = "Password must be at least 6 characters.";
+          break;
+      }
+      setError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
-    setError(message);
-    toast.error(message);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
-const password = watch("password");
+  const password = watch("password");
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
@@ -152,7 +154,9 @@ const password = watch("password");
 
             {/* Email */}
             <div>
-              <label className="block text-white font-medium mb-2">Email *</label>
+              <label className="block text-white font-medium mb-2">
+                Email *
+              </label>
               <input
                 type="email"
                 placeholder="john@example.com"
@@ -168,20 +172,27 @@ const password = watch("password");
                 } rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors`}
               />
               {errors.email && (
-                <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.email.message}
+                </p>
               )}
             </div>
 
             {/* Password */}
             <div>
-              <label className="block text-white font-medium mb-2">Password *</label>
+              <label className="block text-white font-medium mb-2">
+                Password *
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="********"
                   {...register("password", {
                     required: "Password is required",
-                    minLength: { value: 6, message: "Password must be at least 6 characters" },
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 6 characters",
+                    },
                   })}
                   className={`w-full px-4 py-3 bg-white/10 border ${
                     errors.password ? "border-red-400" : "border-blue-400/50"
@@ -192,11 +203,17 @@ const password = watch("password");
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
                 >
-                  {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  {showPassword ? (
+                    <FaEyeSlash size={18} />
+                  ) : (
+                    <FaEye size={18} />
+                  )}
                 </button>
               </div>
               {errors.password && (
-                <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.password.message}
+                </p>
               )}
             </div>
 
@@ -211,10 +228,13 @@ const password = watch("password");
                   placeholder="********"
                   {...register("confirmPassword", {
                     required: "Please confirm your password",
-                    validate: (value) => value === password || "Passwords do not match",
+                    validate: (value) =>
+                      value === password || "Passwords do not match",
                   })}
                   className={`w-full px-4 py-3 bg-white/10 border ${
-                    errors.confirmPassword ? "border-red-400" : "border-blue-400/50"
+                    errors.confirmPassword
+                      ? "border-red-400"
+                      : "border-blue-400/50"
                   } rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors`}
                 />
                 <button
@@ -222,17 +242,25 @@ const password = watch("password");
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white"
                 >
-                  {showConfirmPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                  {showConfirmPassword ? (
+                    <FaEyeSlash size={18} />
+                  ) : (
+                    <FaEye size={18} />
+                  )}
                 </button>
               </div>
               {errors.confirmPassword && (
-                <p className="text-red-400 text-sm mt-1">{errors.confirmPassword.message}</p>
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.confirmPassword.message}
+                </p>
               )}
             </div>
 
             {/* Role */}
             <div>
-              <label className="block text-white font-medium mb-2">Select Role *</label>
+              <label className="block text-white font-medium mb-2">
+                Select Role *
+              </label>
               <select
                 {...register("role")}
                 className="w-full px-4 py-3 bg-blue-700 border border-blue-400/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-400 transition-colors"

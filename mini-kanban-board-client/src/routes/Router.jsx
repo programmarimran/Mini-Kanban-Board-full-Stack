@@ -8,6 +8,7 @@ import ErrorPage from "../pages/error/ErrorPage";
 import BoardList from "../pages/dashboard/shared/boardList/BoardList";
 import BoardDetails from "../pages/dashboard/shared/boardList/BoardDetails";
 import PrivateRoute from "./PrivateRoute";
+import ForbiddenPage from "../pages/error/ForbiddenPage";
 
 const router = createBrowserRouter([
   {
@@ -32,5 +33,9 @@ const router = createBrowserRouter([
       { path: "/register", element: <Register /> },
     ],
   },
+  {
+    path:"/forbidden",
+    element:<ForbiddenPage/>
+  }
 ]);
 export default router;
